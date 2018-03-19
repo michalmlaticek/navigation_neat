@@ -1,8 +1,12 @@
+array2gif==0.1.0b1
 bresenham==0.2
 cycler==0.10.0
+decorator==4.0.11
 graphviz==0.8.2
+imageio==2.1.2
 kiwisolver==1.0.1
 matplotlib==2.2.0
+moviepy==0.2.3.2
 neat-python==0.92
 numpy==1.14.1
 Pillow==5.0.0
@@ -10,3 +14,4 @@ pyparsing==2.2.0
 python-dateutil==2.6.1
 pytz==2018.3
 six==1.11.0
+tqdm==4.11.2

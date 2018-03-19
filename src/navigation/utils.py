@@ -3,9 +3,16 @@ import numpy as np
 from bresenham import bresenham
 import math
 
-SimulationConf = namedtuple("SimulationConf", "robot init_rotation start_point end_point map step_count animate")
+Map = namedtuple("Map", "plane start_point end_point")
+
+SimulationConf = namedtuple("SimulationConf", "robot init_rotation map step_count animate")
 
 RobotConf = namedtuple("RobotConf", "radius sensor_angles sensor_len max_speed body")
+
+
+def to_minus_pi_pi(angles):
+    angles = (angles + np.pi) % (2 * np.pi) - np.pi
+    return angles
 
 
 def angle_hypotenuse_to_dxy(angles, hypotenuse):
@@ -56,19 +63,6 @@ def calc_line_coordinates(start_coordinates, end_coordinates):
     return coordinates
 
 
-def read_sensors(sensor_lines, sensor_len, map):
-    readings = np.zeros((len(sensor_lines[0]), len(sensor_lines))) + sensor_len
-    for robot in range(0, len(sensor_lines)):
-        for sensor in range(0, len(sensor_lines[robot])):
-            for line_point in sensor_lines[robot][sensor]:
-                if map[line_point[0], line_point[1]] == 0.0:
-                    # calc distance from start of the sensor line to point of contact
-                    readings[sensor, robot] = point_distance(sensor_lines[robot][sensor][0], line_point)
-                    break
-
-    return readings
-
-
 def point_distance(source, target):
     return math.sqrt(((target[0] - source[0]) ** 2) + ((target[1] - source[1]) ** 2))
 
@@ -81,28 +75,12 @@ def point_dist_vec(source, target):
 
 
 # TODO: test -pi / +pi behavior
-def calc_angle_error(source, target, robot_angles):
+def calc_angle_error(sources, targets, source_angles):
     # move target to source base
-    moved_target = np.subtract(target, source)
+    rebased_target = np.subtract(targets, sources)
     # calc angle to target from [0, 0]
-    target_angles = np.expand_dims(np.arctan2(moved_target[0, :, 1], moved_target[0, :, 0]), axis=0)
-    return np.subtract(robot_angles, target_angles)
-
-
-def normalize_sensor_readings(sensor_readings, sensor_len):
-    return np.subtract(1, np.divide(sensor_readings, sensor_len))
-
-
-def normalize_target_distance(target_distance, max_distance):
-    return np.divide(target_distance, max_distance)
-
-
-def normalize_angle_error(angle_errors):
-    return np.divide(np.add(angle_errors, math.pi), 2 * math.pi)
-
-
-def normalize_angle_error_for_fit(angle_error):
-    return angle_error / math.pi
+    target_angles = np.expand_dims(np.arctan2(rebased_target[0, :, 1], rebased_target[0, :, 0]), axis=0)
+    return np.subtract(source_angles, target_angles)
 
 
 def build_robot_body(radius):
