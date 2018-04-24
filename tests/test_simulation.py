@@ -1,5 +1,5 @@
 import unittest
-import simulation
+import Simulation
 
 class SimulationTest(unittest.TestCase):
     def setUp(self):

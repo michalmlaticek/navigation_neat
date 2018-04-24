@@ -3,7 +3,7 @@ import numpy as np
 
 def get_image(robot_bodies, sensor_lines, map):
     local_map = map.plane.copy()
-    # local_map = np.multiply(local_map.astype(int), 255)
+    local_map = np.multiply(local_map.astype(int), 255)
     for r in range(0, robot_bodies.shape[1]):
         # draw robot body
         for b in range(0, robot_bodies.shape[0]):
