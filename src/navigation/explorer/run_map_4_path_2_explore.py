@@ -3,13 +3,14 @@ import logging
 import init_logging as log
 from Map import Map, MapFactory
 from Robot import Robot
-from Simulation import Simulation
+from SimulationMultiGoal import Simulation
 from SimulationConf import SimulationConf
 from NeatEvolver import NeatEvolver
 import neat
 from datetime import datetime
 import random
 from pathlib import Path
+from MyCheckpoint import MyCheckpointer
 
 # Define run ID
 run_id = datetime.now().timestamp()
@@ -17,7 +18,7 @@ run_id = datetime.now().timestamp()
 # Initialize random seed
 random.seed(run_id)
 
-log_path = Path('../../logs/map_4_path_2/{}'.format(run_id))
+log_path = Path('../../logs/explorer/map_4_path_2/{}'.format(run_id))
 log_path.mkdir(parents=True, exist_ok=True)
 
 # Initialize logging
@@ -44,7 +45,7 @@ simulation_conf = SimulationConf(id=run_id,
                                  robot=robot,
                                  init_rotation=0.0,
                                  map=map,
-                                 step_count=500,
+                                 step_count=200,
                                  pop_size=neat_config.pop_size,
                                  animate=True,
                                  log_folder=log_path)
@@ -52,8 +53,10 @@ logger.info("Simulation config: {}".format(simulation_conf))
 
 simulation = Simulation(simulation_conf)
 
+init_pop = None
+# init_pop = MyCheckpointer.restore_checkpoint('../../logs/explorer/map_4_path_2/1524596948.697983/gen-1')
 evolver = NeatEvolver(neat_config, 500, simulation)
-winner = evolver.evolve()
+winner = evolver.evolve(init_pop)
 
 # Display the winning genome.
 print('\nBest genome:\n{!s}'.format(winner))

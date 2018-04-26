@@ -9,6 +9,7 @@ from neat.reporting import BaseReporter
 
 import logging
 
+
 class MyCheckpointer(BaseReporter):
     """
     A reporter class that performs checkpointing using `pickle`
@@ -38,7 +39,7 @@ class MyCheckpointer(BaseReporter):
         self.current_generation = generation
 
     def end_generation(self, config, population, species_set):
-            self.save_checkpoint(config, population, species_set, self.current_generation)
+        self.save_checkpoint(config, population, species_set, self.current_generation)
 
     def save_checkpoint(self, config, population, species_set, generation):
         """ Save the current simulation state. """
@@ -53,7 +54,7 @@ class MyCheckpointer(BaseReporter):
     @staticmethod
     def restore_checkpoint(filename):
         """Resumes the simulation from a previous saved point."""
-        with open(filename) as f:
+        with open(filename, 'rb') as f:
             generation, config, population, species_set, rndstate = dill.load(f)
             random.setstate(rndstate)
             return Population(config, (population, species_set, generation))

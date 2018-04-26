@@ -24,15 +24,16 @@ class NeatEvolver:
             plt.draw()
             plt.pause(0.001)
 
-    def evolve(self):
+    def evolve(self, init_pop=None):
         self.logger.info("Starting evolution")
-        pop = neat.Population(self.neat_conf)
-        # pop = neat.Checkpointer.restore_checkpoint("0321_1130/neat-checkpoint-171")
-
-        pop.add_reporter(neat.StatisticsReporter())
-        pop.add_reporter(LogReporter(True))
-        pop.add_reporter(
-            MyCheckpointer(folder_path=self.simulation.conf.log_folder))
+        if init_pop is None:
+            pop = neat.Population(self.neat_conf)
+            pop.add_reporter(neat.StatisticsReporter())
+            pop.add_reporter(LogReporter(True))
+            pop.add_reporter(
+                MyCheckpointer(folder_path=self.simulation.conf.log_folder))
+        else:
+            pop = init_pop
 
         winner = pop.run(self._eval_population, self.generation_count)
         self.logger.info("winner: {}".format(winner))
