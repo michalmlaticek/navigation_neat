@@ -1,11 +1,10 @@
 import os
 import logging
 import init_logging as log
-from Map import Map, MapFactory
+from map import Map, MapFactory
 from Robot import Robot
-from Simulation import Simulation
-from SimulationConf import SimulationConf
-from NeatEvolver import NeatEvolver
+from simulation import Simulation, SimulationConf
+from neatevolver import NeatEvolver
 import neat
 from datetime import datetime
 import random

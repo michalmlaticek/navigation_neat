@@ -1,11 +1,11 @@
 import os
 import logging
 import init_logging as log
-from Map import Map, MapFactory
+from map import Map, MapFactory
 from Robot import Robot
-from SimulationMultiGoal import Simulation
+from simulation import Simulation
 from SimulationConf import SimulationConf
-from NeatEvolver import NeatEvolver
+from neatevolver import NeatEvolver
 import neat
 from datetime import datetime
 import random
@@ -17,7 +17,7 @@ run_id = datetime.now().timestamp()
 # Initialize random seed
 random.seed(run_id)
 
-log_path = Path('../../logs/explorer/map_4_path_2/{}'.format(run_id))
+log_path = Path('../../logs/simple_experiment/{}'.format(run_id))
 log_path.mkdir(parents=True, exist_ok=True)
 
 # Initialize logging
@@ -34,7 +34,7 @@ neat_config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                           config_path)
 logger.info("NEAT Config: {}".format(neat_config))
 
-map = MapFactory.create_from_pic('../../data/maps/map_4_path_2.png', [40, 40], [210, 210])
+map = MapFactory.init_basic(250, 250, 2, 30, 60, [40, 40], [210, 210])
 robot = Robot(radius=15,
               sensor_angles_deg=[-60, -40, -20, 0, 20, 40, 60],
               sensor_len=35.0,

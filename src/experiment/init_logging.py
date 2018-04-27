@@ -1,6 +1,5 @@
 import logging
 import logging.handlers
-from pathlib import Path
 
 
 def init(log_path, log_name):
