@@ -11,7 +11,8 @@ experiment_path = 'go_to_target/1524777070'
 gen = 299
 ###############################################
 
-log_path = '../../logs/{}'.format(experiment_path)
+#log_path = '../../logs/{}'.format(experiment_path)
+log_path = 'C:/_user/_other/diplo/code/navigation_neat/logs/go_to_target/1524777070'
 
 # Load population to run
 pop = MyCheckpointer.restore_checkpoint('{}/gen-{}'.format(log_path, gen))
