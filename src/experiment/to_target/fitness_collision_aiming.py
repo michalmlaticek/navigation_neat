@@ -2,36 +2,26 @@ import utils as utils
 import numpy as np
 import math
 import logging
+from FrameFactory import FrameFactory
+import matplotlib.pyplot as plt
 
 
-class SimulationConf:
-    def __init__(self, id, robot, init_rotation, map, step_count, pop_size, animate, log_folder):
-        self.id = id
+class Fitness:
+
+    def __init__(self, robot, init_rotation, sim_map, step_count, pop_size, animate):
+        logger = logging.getLogger('Simulation')
+        logger.info('Initializing')
+
         self.robot = robot
         self.init_rotation = init_rotation
-        self.map = map
+        self.sim_map = sim_map
         self.step_count = step_count
         self.pop_size = pop_size
         self.animate = animate
-        self.log_folder = log_folder
 
+        self.max_distance = math.sqrt((self.sim_map.plane.shape[0] ** 2) + (self.sim_map.plane.shape[1] ** 2))
 
-class Simulation:
-
-    def __init__(self, conf):
-        logger = logging.getLogger('Simulation')
-        logger.info('Initializing simulation')
-
-        self.conf = conf
-
-        # for readability
-        self.pop_size = conf.pop_size
-        self.map = conf.map
-        self.robot = conf.robot
-        self.max_distance = math.sqrt((self.map.plane.shape[0] ** 2) + (self.map.plane.shape[1] ** 2))
-
-        self.fitnesses = None
-        self.net_ids = None
+        self.fits = None
         self.robot_angles = None
         self.sensor_angles = None
         self.robot_positions = None
@@ -41,22 +31,25 @@ class Simulation:
         self.normalized_angle_errors = None
         self.target_distances = None
         self.normalized_target_distances = None
+        self.max_distance_from_start = None
         self.nets = None
+        self.collision_counters = None
+        self.cumulative_angle_errs = None
+
+        self.fig = None
+        self.img = None
 
     def reset(self):
-        self.fitnesses = np.full((1, self.pop_size), -100.0)  # init to -100
-
-        # array of population indexes
-        self.net_ids = np.arange(self.pop_size).reshape(1, self.pop_size)
+        self.fits = np.full((1, self.pop_size), -100000.0)  # init fitness to -100000
 
         # initialize robot angles (1, pop_size)
-        self.robot_angles = np.full((1, self.pop_size), utils.to_minus_pi_pi(self.conf.init_rotation))
+        self.robot_angles = np.full((1, self.pop_size), utils.to_minus_pi_pi(self.init_rotation))
         # initialize sensor angles of robots
         self.sensor_angles = np.zeros(
             (len(self.robot.sensor_angles), self.pop_size)) + utils.to_minus_pi_pi(self.robot.sensor_angles)
 
         # initialize robot positions (1, pop_size, 2)
-        self.robot_positions = np.full((1, self.pop_size, 2), self.map.start_point)
+        self.robot_positions = np.full((1, self.pop_size, 2), self.sim_map.start_point)
         self.robot_bodies = np.add(self.robot.body, np.rint(self.robot_positions)).astype(int)
         self.sensor_lines = self.__update_sensor_lines()
 
@@ -67,8 +60,14 @@ class Simulation:
         # calculate target distances and then normalize them
         self.target_distances = self.__update_target_distances()
         self.normalized_target_distances = self.__normalize_target_distances()
+        self.max_distance_from_start = np.zeros((1, self.pop_size))
+        self.collision_counters = np.zeros((1, self.pop_size))
+        self.cumulative_angle_errs = np.zeros((1, self.pop_size))
 
-    def simulate(self, nets, step_count, step_callback=None, callback_args=None):
+        self.fig = None
+        self.img = None
+
+    def simulate(self, nets):
         '''
 
         :param step_count:
@@ -79,41 +78,33 @@ class Simulation:
 
         self.nets = nets
 
-        for i in range(0, step_count):
-            # print("step: {}".format(i))
+        for i in range(0, self.step_count):
             self.step()
-            if step_callback is not None:
-                if callback_args is None:
-                    step_callback()
-                else:
-                    step_callback(*callback_args)
+            if self.animate:
+                self.__redraw()
 
-        self.__handle_remaining()
+        self.__set_fits()
 
-        return self.fitnesses
+        return self.fits, self.target_distances, self.collision_counters
 
     def step(self):
         net_inputs = self.__create_net_inputs()
-
         net_outputs = self.__eval_nets(net_inputs)
-
         (delta_angles, robot_speeds) = self.__extract_outputs(net_outputs)
 
         self.__rotate(delta_angles)  # rotate robos
         self.__translate(robot_speeds)  # move robots based on speed in the new direction
-
         self.__update_angle_errors()
         self.__normalize_angle_errors()
-
         self.__update_target_distances()
         self.__normalize_target_distances()
-
         self.__update_sensor_lines()
+        self.__handle_collisions()
 
-        self.__handle_collisions_or_targets()
+        self.cumulative_angle_errs = np.add(self.cumulative_angle_errs, np.abs(self.angle_errors))
 
     def __update_angle_errors(self):
-        self.angle_errors = utils.calc_angle_error(self.robot_positions, self.map.end_point, self.robot_angles)
+        self.angle_errors = utils.calc_angle_error(self.robot_positions, self.sim_map.end_point, self.robot_angles)
         self.angle_errors = utils.to_minus_pi_pi(self.angle_errors)
         return self.angle_errors
 
@@ -122,7 +113,7 @@ class Simulation:
         return self.normalized_angle_errors
 
     def __update_target_distances(self):
-        self.target_distances = utils.point_dist_vec(self.robot_positions, self.map.end_point)
+        self.target_distances = utils.point_dist_vec(self.robot_positions, self.sim_map.end_point)
         return self.target_distances
 
     def __normalize_target_distances(self):
@@ -175,64 +166,43 @@ class Simulation:
                     or robot_body[idx, 1] >= 250
                     or map[robot_body[idx, 0], robot_body[idx, 1]] == 0):
                 return True
-
-    def __is_goal(self, robot_position, target):
-        return np.array_equal(np.rint(robot_position).astype(int), target)
-
-    def __fitness_value(self, norm_target_distance, norm_angle_error, alfa, beta):
-        # adjust angle error to consider only absolute value of angle error
-        return (alfa * beta * norm_target_distance) * -1  # we are maximizing to 0
-
-    def __deactivate_nets(self, ids_to_delete):
-
-        to_delete = np.array(ids_to_delete)
-
-        self.net_ids = np.delete(self.net_ids, to_delete, 1)
-        self.robot_positions = np.delete(self.robot_positions, to_delete, 1)
-        self.robot_angles = np.delete(self.robot_angles, to_delete, 1)
-        self.nets = np.delete(self.nets, to_delete)
-        self.sensor_angles = np.delete(self.sensor_angles, to_delete, 1)
+        return False
 
     def __read_sensors(self):
         readings = np.zeros((len(self.sensor_lines[0]), len(self.sensor_lines))) + self.robot.sensor_len
         for robot in range(0, len(self.sensor_lines)):
             for sensor in range(0, len(self.sensor_lines[robot])):
                 for line_point in self.sensor_lines[robot][sensor]:
-                    if self.map.plane[line_point[0], line_point[1]] != 1:  # 1 means free
+                    if self.sim_map.plane[line_point[0], line_point[1]] != 1:  # 1 means free
                         # calc distance from start of the sensor line to point of contact
                         readings[sensor, robot] = utils.point_distance(self.sensor_lines[robot][sensor][0], line_point)
                         break
-        normalized_readings = self.__normalize_sensor_readings(readings)
-        return normalized_readings
+        readings = self.__normalize_sensor_readings(readings)
+        return readings
 
     def __normalize_sensor_readings(self, sensor_readings):
         return np.subtract(1, np.divide(sensor_readings, self.robot.sensor_len))
 
-    def __handle_collisions_or_targets(self):
-        nets_to_deactivate = []
-        for i in range(0, self.net_ids.shape[1]):
-            is_collision = self.__is_collision(self.robot_bodies[:, i, :], self.map.plane)
+    def __handle_collisions(self):
+        for i in range(0, len(self.nets)):
+            is_collision = self.__is_collision(self.robot_bodies[:, i, :], self.sim_map.plane)
             if is_collision:
-                self.fitnesses[0, self.net_ids[0, i]] = self.__fitness_value(
-                    self.normalized_target_distances[0, i],
-                    self.normalized_angle_errors[0, i],
-                    alfa=1,
-                    beta=1.5)
-                nets_to_deactivate.append(i)
-                continue
+                self.collision_counters[0, i] += 1
 
-            is_target = self.__is_goal(self.robot_positions[:, [i], :], self.map.end_point)
-            if is_target:
-                self.fitnesses[0, self.net_ids[0, i]] = 0.
-                nets_to_deactivate.append(i)
-                continue
+    def __set_fits(self):
+        self.fits = -1 * np.add(
+            (np.add(self.target_distances, self.collision_counters * 10)),
+            self.cumulative_angle_errs * 0.1)
 
-        self.__deactivate_nets(nets_to_deactivate)
+    def __redraw(self):
+        frame = FrameFactory.get_image(self.robot_bodies,
+                                       self.sensor_lines,
+                                       self.sim_map)
+        if self.fig is None:
+            self.fig = plt.Figure()
+            self.img = plt.imshow(frame)
+        else:
+            self.img.set_data(frame)
 
-    def __handle_remaining(self):
-        for i in range(0, self.net_ids.shape[1]):
-            self.fitnesses[0, self.net_ids[0, i]] = self.__fitness_value(
-                self.normalized_target_distances[0, i],
-                self.normalized_angle_errors[0, i],
-                alfa=1,
-                beta=1)
+        plt.draw()
+        plt.pause(0.001)

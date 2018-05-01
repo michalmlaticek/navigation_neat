@@ -11,7 +11,7 @@ from neat.reporting import BaseReporter
 class LogReporter(BaseReporter):
     """Uses `logging` to output information about the run; an example reporter class."""
     def __init__(self, show_species_detail):
-        self.logger = logging.getLogger('BaseReporter')
+        self.logger = logging.getLogger('LogReporter')
         self.show_species_detail = show_species_detail
         self.generation = None
         self.generation_start_time = None

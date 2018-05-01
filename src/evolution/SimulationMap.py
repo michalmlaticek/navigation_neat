@@ -2,7 +2,7 @@ from PIL import Image
 import numpy as np
 
 
-class Map:
+class SimulationMap:
 
     def __init__(self, plane, height, width, start, target):
         self.plane = plane
@@ -28,7 +28,7 @@ class MapFactory:
         plane[height - border_size:, :] = 0.
         plane[:, width - border_size:] = 0.
 
-        return Map(plane, height, width, start, target)
+        return SimulationMap(plane, height, width, start, target)
 
     @staticmethod
     def create_from_pic(path, start, target):
@@ -39,4 +39,4 @@ class MapFactory:
         start = np.array([[start]])
         target = np.array([[target]])
 
-        return Map(plane, height, width, start, target)
+        return SimulationMap(plane, height, width, start, target)

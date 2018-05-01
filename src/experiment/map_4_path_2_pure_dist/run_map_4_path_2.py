@@ -1,10 +1,10 @@
 import os
 import logging
 import init_logging as log
-from map import Map, MapFactory
+from SimulationMap import MapFactory
 from Robot import Robot
-from simulation import Simulation, SimulationConf
-from neatevolver import NeatEvolver
+from pure_distance.fitness import Simulation, SimulationConf
+from NeatEvolver import NeatEvolver
 import neat
 from datetime import datetime
 import random
@@ -24,10 +24,10 @@ log.init(log_path, 'experiment.log')
 logger = logging.getLogger('simple_experiment')
 logger.info("Starting experiment with id: {}".format(run_id))
 
-# Load the config file, which is assumed to live in
+# Load the neat_config file, which is assumed to live in
 # the same directory as this script.
 local_dir = os.path.dirname(__file__)
-config_path = os.path.join(local_dir, 'config')
+config_path = os.path.join(local_dir, 'neat_config')
 neat_config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                           neat.DefaultSpeciesSet, neat.DefaultStagnation,
                           config_path)
@@ -47,7 +47,7 @@ simulation_conf = SimulationConf(id=run_id,
                                  pop_size=neat_config.pop_size,
                                  animate=True,
                                  log_folder=log_path)
-logger.info("Simulation config: {}".format(simulation_conf))
+logger.info("Simulation neat_config: {}".format(simulation_conf))
 
 simulation = Simulation(simulation_conf)
 

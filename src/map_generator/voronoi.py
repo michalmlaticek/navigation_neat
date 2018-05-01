@@ -1,7 +1,17 @@
 from PIL import Image
 import random
 import math
-import numpy as np
+from pathlib import Path
+
+##########################################
+# Config section
+cells = 40
+map_size = 250
+paths_path = "../../data/paths"
+maps_path = Path("../../data/maps/{}_cells".format(cells))
+##########################################
+
+maps_path.mkdir(parents=True, exist_ok=True)  # create path if not exist
 
 
 def generate_voronoi_diagram(size, num_cells):
@@ -33,7 +43,7 @@ def generate_voronoi_diagram(size, num_cells):
     return map_image
 
 
-def generate_voronoi_map(size, num_cells, robot_radius, map_folder, map_id):
+def generate_voronoi_map(size, num_cells, map_folder, paths_path, map_id):
     map_image = generate_voronoi_diagram(size, num_cells)
 
     #  add fence
@@ -45,18 +55,10 @@ def generate_voronoi_map(size, num_cells, robot_radius, map_folder, map_id):
             map_image.putpixel((k, size - (n + 1)), (0, 0, 0))
             map_image.putpixel((size - (n + 1), k), (0, 0, 0))
 
-    # # clear start and end area
-    # areas_to_clear = [(50, 50), (200, 200)]
-    # for (x, y) in areas_to_clear:
-    #     for m in range(x - robot_radius, x + robot_radius):
-    #         for n in range(y - robot_radius, y + robot_radius):
-    #             map_matrix[m, n] = 1
-    #             map_image.putpixel((m, n), (255, 255, 255))
-
     # create versions with different paths
-    path1_img = Image.open("paths/path1.png").convert("RGB")
-    path2_img = Image.open("paths/path2.png").convert("RGB")
-    path3_img = Image.open("paths/path3.png").convert("RGB")
+    path1_img = Image.open("{}/path1.png".format(paths_path)).convert("RGB")
+    path2_img = Image.open("{}/path2.png".format(paths_path)).convert("RGB")
+    path3_img = Image.open("{}/path3.png".format(paths_path)).convert("RGB")
 
     map_path1_img = map_image.copy()
     map_path2_img = map_image.copy()
@@ -91,4 +93,4 @@ def generate_voronoi_map(size, num_cells, robot_radius, map_folder, map_id):
 
 
 for i in range(0, 100):
-    generate_voronoi_map(250, 15, 20, "maps5", i)
+    generate_voronoi_map(map_size, cells, maps_path, paths_path, i)

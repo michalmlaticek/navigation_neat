@@ -3,16 +3,16 @@ import dill
 from neat.six_util import iteritems
 import neat
 import matplotlib.pyplot as plt
-import visualization as viz
+import FrameFactory as viz
 
 ###############################################
 # TODO: populate with correct values
-experiment_path = 'go_to_target/1524777070'
-gen = 299
+experiment_path = 'pure_distance/1524949367'
+gen = 999
 ###############################################
 
-#log_path = '../../logs/{}'.format(experiment_path)
-log_path = 'C:/_user/_other/diplo/code/navigation_neat/logs/go_to_target/1524777070'
+log_path = '../../logs/{}'.format(experiment_path)
+# log_path = 'C:/_user/_other/diplo/code/navigation_neat/logs/pure_distance/1524777070'
 
 # Load population to run
 pop = MyCheckpointer.restore_checkpoint('{}/gen-{}'.format(log_path, gen))
@@ -49,3 +49,5 @@ def draw(img, sim):
 
 
 simulation.simulate(nets, simulation.conf.step_count, step_callback=draw, callback_args=[img, simulation])
+
+to_break = True

@@ -1,22 +1,23 @@
 import os
 import logging
 import init_logging as log
-from map import Map, MapFactory
+from SimulationMap import MapFactory
 from Robot import Robot
-from simulation_allow_collision import Simulation, SimulationConf
-from neatevolver import NeatEvolver
+from to_target.fitness_collision_aiming import Fitness, SimulationConf
+from NeatEvolver import NeatEvolver
 import neat
 import time
 import random
 from pathlib import Path
 from experiment_conf import ExperimentConf
 import dill
+import math
 
 # TODO: set values
-experiment_id = "go_to_target"
+experiment_id = "pure_distance"
 run_id = round(time.time())  # or some other num value
 
-gen_count = 300
+gen_count = 1000
 
 # Initialize random seed
 random.seed(run_id)
@@ -30,11 +31,18 @@ logger = logging.getLogger('run')
 logger.info("Starting experiment: {} - with id: {}".format(experiment_id, run_id))
 
 ###################################################################################################
-# Load the neat config file, which is assumed to live in the same directory as this script.
-config_path = os.path.join(os.path.dirname(__file__), 'config')
+# Load the neat neat_config file, which is assumed to live in the same directory as this script.
+config_path = os.path.join(os.path.dirname(__file__), 'neat_config')
 neat_conf = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
                         config_path)
+
+
+def roundedlogsig(x):
+    return round(1 / (1 + math.exp(-x)), 4)
+
+
+neat_conf.genome_config.add_activation('roundedlogsig', roundedlogsig)
 logger.info("NEAT Config: {}".format(neat_conf))
 ###################################################################################################
 
@@ -55,9 +63,9 @@ simulation_conf = SimulationConf(robot=robot,
                                  step_count=250,
                                  pop_size=neat_conf.pop_size,
                                  animate=False)
-logger.info("Simulation config: {}".format(simulation_conf))
+logger.info("Simulation neat_config: {}".format(simulation_conf))
 
-simulation = Simulation(simulation_conf)
+simulation = Fitness(simulation_conf)
 ###################################################################################################
 
 ###################################################################################################
@@ -71,8 +79,13 @@ with open(exp_conf_file, 'wb') as f:
 
 ###################################################################################################
 # Run evolver
+
 evolver = NeatEvolver(experiment_conf)
 winner = evolver.evolve()
+
+# pop = MyCheckpointer.restore_checkpoint('../../logs/pure_distance/1524842042/gen-299'.format())
+# logger.info('Restoring population: ../../logs/pure_distance/1524842042/gen-299')
+# winner = evolver.evolve(pop)
 
 # Display the winning genome.
 print('\nBest genome:\n{!s}'.format(winner))
