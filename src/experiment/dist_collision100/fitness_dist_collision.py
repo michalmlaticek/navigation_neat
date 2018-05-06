@@ -39,7 +39,10 @@ class Fitness:
         self.fig = None
         self.img = None
 
-    def reset(self):
+    def reset(self, pop_size=None):
+        if pop_size is not None:
+            self.pop_size = pop_size
+
         self.fits = np.full((1, self.pop_size), -100000.0)  # init fitness to -100000
 
         # initialize robot angles (1, pop_size)
@@ -144,8 +147,13 @@ class Fitness:
         return net_outputs
 
     def __extract_outputs(self, net_outputs):
-        delta_angles = np.subtract(np.multiply(net_outputs[[0], :], 2 * math.pi), math.pi)
-        robot_speeds = np.multiply(net_outputs[[1], :], self.robot.max_speed)  # actually distance because t = 1
+        # delta_angles = np.subtract(np.multiply(net_outputs[[0], :], 2 * math.pi), math.pi)
+        # robot_speeds = np.multiply(net_outputs[[1], :], self.robot.max_speed)  # actually distance because t = 1
+
+        delta_angles = np.multiply(net_outputs[[0], :],
+                                   math.pi)  # the output is between -1 and 1 so that represents -pi and pi
+        robot_speeds = np.multiply(np.add(net_outputs[[1], :], 1),
+                                   self.robot.max_speed / 2)  # actually distance because t = 1
         return delta_angles, robot_speeds
 
     def __rotate(self, delta_angles):
@@ -190,9 +198,7 @@ class Fitness:
                 self.collision_counters[0, i] += 1
 
     def __set_fits(self):
-        self.fits = -1 * np.add(
-            (np.add(self.target_distances, self.collision_counters * 10)),
-            self.cumulative_angle_errs * 0.1)
+        self.fits = -1 * np.add(self.target_distances, self.collision_counters * 100)
 
     def __redraw(self):
         frame = FrameFactory.get_image(self.robot_bodies,

@@ -7,47 +7,43 @@ import FrameFactory as viz
 
 ###############################################
 # TODO: populate with correct values
-experiment_path = 'pure_distance/1524949367'
-gen = 999
+#experiment_path = 'dist_collision100_angleErr/1525298334'
+experiment_path = 'dist_collision100/1525424125'
+gen = 399  # Set to None for winner
 ###############################################
 
 log_path = '../../logs/{}'.format(experiment_path)
 # log_path = 'C:/_user/_other/diplo/code/navigation_neat/logs/pure_distance/1524777070'
 
-# Load population to run
-pop = MyCheckpointer.restore_checkpoint('{}/gen-{}'.format(log_path, gen))
-genomes = list(iteritems(pop.population))
-neat_conf = pop.config
-# initialize nets
-nets = []
-for genome_id, genome in genomes:
-    nets.append(neat.nn.FeedForwardNetwork.create(genome, neat_conf))
 
+nets = []
+if gen is not None:
+    # Load population to run
+    pop = MyCheckpointer.restore_checkpoint('{}/pop-gen-{}'.format(log_path, gen))
+    genomes = list(iteritems(pop.population))
+    neat_conf = pop.config
+    # initialize nets
+    for genome_id, genome in genomes:
+        nets.append(neat.nn.FeedForwardNetwork.create(genome, neat_conf))
+else:
+    config_path = '{}/neat_config'.format(log_path)
+    neat_conf = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                            neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                            config_path)
+    # winner
+    with open('{}/winner-gen-1499'.format(log_path), 'rb') as f:
+        winner = dill.load(f)
+    nets.append(neat.nn.FeedForwardNetwork.create(winner, neat_conf))
 # Load configuration used
 exp_conf_path = '{}/experiment_conf'.format(log_path)
 with open(exp_conf_path, 'rb') as f:
     exp_conf = dill.load(f)
 
 # Load simulation
-simulation = exp_conf.simulation
-simulation.reset()
+fitness = exp_conf[2]
+fitness.reset()
+fitness.animate = True
 
-# prepare fig
-fig = plt.Figure()
-img = plt.imshow(viz.get_image(simulation.robot_bodies,
-                               simulation.sensor_lines,
-                               simulation.sim_map))
-
-
-def draw(img, sim):
-    img.set_data(viz.get_image(sim.robot_bodies,
-                               sim.sensor_lines,
-                               sim.sim_map))
-    plt.draw()
-    plt.pause(0.001)
-
-
-
-simulation.simulate(nets, simulation.conf.step_count, step_callback=draw, callback_args=[img, simulation])
+fitness.simulate(nets)
 
 to_break = True

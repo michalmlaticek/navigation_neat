@@ -50,7 +50,8 @@ class NeatEvolver:
         for genome_id, genome in genomes:
             nets.append(neat.nn.FeedForwardNetwork.create(genome, neat_config))
 
-        self.fitness.reset()
+        self.logger.info("Net count: {}".format(len(nets)))
+        self.fitness.reset(len(nets))
         data = self.fitness.simulate(nets)
         self.logger.info("Fitness values: {}".format(data[0]))
 

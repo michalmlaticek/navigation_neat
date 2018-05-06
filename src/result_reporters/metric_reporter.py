@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import dill
 
-log_folder = 'C:/_user/_other/diplo/code/navigation_neat/logs/pure_distance/1524949367'
-gen_count = 1000
+log_folder = 'C:/_user/_other/diplo/code/navigation_neat/logs/dist_collision100_angleErr/1525216516'
+gen_count = 1224
 pop_size = 100
 
 fits = np.zeros((gen_count, pop_size))

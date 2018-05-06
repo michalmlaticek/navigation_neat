@@ -11,7 +11,7 @@ from GenomeVisualizer import GenomeVisualizer
 ###################################################################################################
 ###################################################################################################
 # Population to load
-experiment_id = "to_target"
+experiment_id = "dist_collision100_angleErr"
 orig_run_id = '1525210220'
 gen_num = 1
 

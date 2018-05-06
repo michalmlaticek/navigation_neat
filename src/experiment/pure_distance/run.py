@@ -3,7 +3,7 @@ import logging
 import init_logging as log
 from SimulationMap import MapFactory
 from Robot import Robot
-from to_target.fitness_collision_aiming import Fitness, SimulationConf
+from dist_collision100_angleErr.fitness_collision_angleerr import Fitness, SimulationConf
 from NeatEvolver import NeatEvolver
 import neat
 import time

@@ -5,7 +5,7 @@ from pathlib import Path
 
 ##########################################
 # Config section
-cells = 40
+cells = 60
 map_size = 250
 paths_path = "../../data/paths"
 maps_path = Path("../../data/maps/{}_cells".format(cells))

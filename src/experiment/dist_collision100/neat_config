@@ -1,16 +1,14 @@
-#--- parameters for the XOR-2 experiment ---#
-
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = -0.0001
-pop_size              = 100
+fitness_threshold     = -0.01
+pop_size              = 200
 reset_on_extinction   = False
 
 [DefaultGenome]
 # node activation options
-activation_default      = hardlogsig
+activation_default      = clamped
 activation_mutate_rate  = 0.0
-activation_options      = hardlogsig
+activation_options      = clamped
 
 # node aggregation options
 aggregation_default     = sum
@@ -21,7 +19,7 @@ aggregation_options     = sum
 bias_init_mean          = 0.0
 bias_init_stdev         = 1.0
 bias_max_value          = 1.0
-bias_min_value          = 0.0
+bias_min_value          = -1.0
 bias_mutate_power       = 0.5
 bias_mutate_rate        = 0.7
 bias_replace_rate       = 0.1
@@ -39,14 +37,14 @@ enabled_default         = True
 enabled_mutate_rate     = 0.01
 
 feed_forward            = True
-initial_connection      = full
+initial_connection      = full_nodirect
 
 # node add/remove rates
 node_add_prob           = 0.2
 node_delete_prob        = 0.2
 
 # network parameters
-num_hidden              = 0
+num_hidden              = 1
 num_inputs              = 9
 num_outputs             = 2
 
@@ -62,8 +60,8 @@ response_replace_rate   = 0.0
 # connection weight options
 weight_init_mean        = 0.0
 weight_init_stdev       = 1.0
-weight_max_value        = 5.0
-weight_min_value        = -5.0
+weight_max_value        = 1.0
+weight_min_value        = -1.0
 weight_mutate_power     = 0.5
 weight_mutate_rate      = 0.8
 weight_replace_rate     = 0.1
