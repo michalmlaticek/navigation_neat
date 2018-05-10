@@ -7,9 +7,11 @@ import FrameFactory as viz
 
 ###############################################
 # TODO: populate with correct values
-#experiment_path = 'dist_collision100_angleErr/1525298334'
-experiment_path = 'dist_collision100/1525424125'
-gen = 399  # Set to None for winner
+# experiment_path = 'dist_collision100_angleErr/1525298334'
+# experiment_path = 'dist_collision100/1525424125'
+experiment_path = 'meandist_collision100/1525807840'
+gen = 782  # Set to None for winner
+top_x = None  # Set to None for all
 ###############################################
 
 log_path = '../../logs/{}'.format(experiment_path)
@@ -21,6 +23,16 @@ if gen is not None:
     # Load population to run
     pop = MyCheckpointer.restore_checkpoint('{}/pop-gen-{}'.format(log_path, gen))
     genomes = list(iteritems(pop.population))
+
+    # sort
+    if top_x is not None:
+        def cond(item):
+            return item[1].fitness
+
+
+        sorted_genoms = sorted(genomes, reverse=True, key=cond)
+        genomes = sorted_genoms[1:top_x]
+
     neat_conf = pop.config
     # initialize nets
     for genome_id, genome in genomes:
@@ -41,7 +53,7 @@ with open(exp_conf_path, 'rb') as f:
 
 # Load simulation
 fitness = exp_conf[2]
-fitness.reset()
+fitness.reset(pop_size=len(nets))
 fitness.animate = True
 
 fitness.simulate(nets)

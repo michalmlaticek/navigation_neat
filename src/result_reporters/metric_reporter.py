@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import dill
 
-log_folder = 'C:/_user/_other/diplo/code/navigation_neat/logs/dist_collision100_angleErr/1525216516'
-gen_count = 1224
-pop_size = 100
+log_folder = 'C:/_user/_other/diplo/code/navigation_neat/logs/dist_collision100/1525424125'
+gen_count = 1500
+pop_size = 200
 
 fits = np.zeros((gen_count, pop_size))
 collis = np.zeros((gen_count, pop_size))
