@@ -10,8 +10,8 @@ import FrameFactory as viz
 # experiment_path = 'dist_collision100_angleErr/1525298334'
 # experiment_path = 'dist_collision100/1525424125'
 experiment_path = 'meandist_collision100/1525807840'
-gen = 782  # Set to None for winner
-top_x = None  # Set to None for all
+gen = 1023  # Set to None for winner
+top_x = 20  # Set to None for all
 ###############################################
 
 log_path = '../../logs/{}'.format(experiment_path)
@@ -31,7 +31,7 @@ if gen is not None:
 
 
         sorted_genoms = sorted(genomes, reverse=True, key=cond)
-        genomes = sorted_genoms[1:top_x]
+        genomes = sorted_genoms[0:top_x]
 
     neat_conf = pop.config
     # initialize nets
